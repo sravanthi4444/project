@@ -1,0 +1,75 @@
+// frontend/src/App.js
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [message, setMessage] = useState('');
+  const [items, setItems] = useState([]);
+  const [newItem, setNewItem] = useState('');
+
+  // Fetch message from the backend
+  useEffect(() => {
+    axios.get('http://localhost:5000/api')
+      .then(response => {
+        setMessage(response.data.message);
+      })
+      .catch(error => {
+        console.error("There was an error fetching the message:", error);
+      });
+  }, []);
+
+  // Fetch items from the backend
+  useEffect(() => {
+    axios.get('http://localhost:5000/api/items')
+      .then(response => {
+        setItems(response.data);
+      })
+      .catch(error => {
+        console.error("There was an error fetching items:", error);
+      });
+  }, [items]);
+
+  // Handle adding a new item
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    if (!newItem) return;
+    try {
+      const response = await axios.post('http://localhost:5000/api/items', { name: newItem });
+      setNewItem('');
+      setItems([...items, response.data]);
+    } catch (error) {
+      console.error("There was an error adding the item:", error);
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>{message}</h1>
+
+      <div>
+        <h2>Items</h2>
+        <ul>
+          {items.map(item => (
+            <li key={item._id}>{item.name}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h3>Add New Item</h3>
+        <form onSubmit={handleAddItem}>
+          <input
+            type="text"
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            placeholder="Enter item name"
+          />
+          <button type="submit">Add Item</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default App;
